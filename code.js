@@ -1,52 +1,295 @@
+
 /**
-* @NotOnlyCurrentDoc
-*/
-
-/*--------------------------- Global Variables -----------------------------------*/
-/*--------------THESE NEED TO BE CHANGED FOR EACH PROJECT-------------------------*/
-
-var PROJECT_TITLE = "Testing Creative Brief Copy";
-var CURR_DIR_ID = "0B74lDxO3Qp2VcnNHeEh0cjhLN1E";
-var FORM_ID = "1ojLtk0tYMYO0YOtbyG7Yg4JcpP_W_iLLWMNxyGML0RU";
-var FORM_URL = 'https://docs.google.com/a/boston.gov/forms/d/1ojLtk0tYMYO0YOtbyG7Yg4JcpP_W_iLLWMNxyGML0RU/';
-var RESPONSES_ID = "15REcrAb2kAIvJgx7LLjVtXqApgP8mFC32Q_J-gA8A44"
-var RESPONSES_URL = '15REcrAb2kAIvJgx7LLjVtXqApgP8mFC32Q_J-gA8A44';
-var ERROR_LOG_HEADERS = ['ScriptName', 'ErrorMessage', 'LineNum', 'TimeStamp', 'Fixed?'];
-var ERROR_SHEET_ID = '';
-var ERROR_SHEET_URL = '';
-
-
-
-
-/*--------------------------- onInstall, onOpen() -----------------------------------*/
-/**
- * Runs when the add-on is installed; calls onOpen() to ensure menu creation and
- * any other initializion work is done immediately (like authorization)
+ * Creates the ErrorLog sheet in the same directory
+ *
+ * (assumes that EL does not exist)
+ * Since DriveApp.createFile can't create a MimeType of GOOGLE_SHEETS (reported bug)
+ * This is a workaround to create an ErrorLog in the same directory
  */
-function onInstall(e) {
-  onOpen();
+function createEL(){
+    try{
+      var sheet = SpreadsheetApp.create(ERROR_LOG_TITLE);
+      var folder = DriveApp.getFolderById(CURR_DIR_ID); //open folder
+      var errorsheet = DriveApp.getFileById((sheet.getId())).makeCopy(ERROR_LOG_TITLE, folder); //make copy
+      DriveApp.getFileById(sheet.getId()).setTrashed(true); //delete original
+      var properties = PropertiesService.getDocumentProperties(); //init props
+      var eprop = properties.setProperty('EL', errorsheet.getId()); //add ELID as EL prop
+      formatErrorHeaders(); //format the headers using the EL prop
+      Logger.log("Passed! in createEL()");
+    }
+    catch(error){
+       Logger.log("*Error: createErrorSheet(): " + error.message + " in createErrorSheet");
+      errorHandler(error)
+    }
 }
 
-/*
- * Runs when the form is opened
+
+/**
+ * Queries the current directory to see if an Error Log file exists
+ *
+ * @return {Boolean} based on existence
  */
-function onOpen() {
-  //try/catch to log exec errors
+function foundEL(){
   try{
-    /* Opening the necessary sheets/docs (on the server) */
-    var responses = SpreadsheetApp.openById(RESPONSES_ID); // open the form responses
-    var form = FormApp.openById(FORM_ID); // open the form
-    var folder = DriveApp.getFolderById(CURR_DIR_ID); //open the current folder
-    /* Setup functions */
-    Logger.log("Running createFormTrigger():");
-    breakingthetest();
-    createFormTrigger(); //create the formsubmit trigger
+      var found = false;
+      var files = DriveApp.getFolderById(CURR_DIR_ID).getFiles();
+      while(files.hasNext()){
+        var file = files.next();
+        if(file.getName() == ERROR_LOG_TITLE){
+           ERROR_SHEET_ID = file.getId();
+           found = true;
+           break;
+        }
+      }
+      Logger.log("foundEl returning: " + found);
+      Logger.log("foundEl() passed!");
+      return found
+
   }
   catch(error){
-    Logger.log("Execution Error: OnOpen() failed: " + error.message);
-    //log to errorsheet
-    Logger.log("Logging the error from OnOpen() to errorHandler()");
-    logError(error);
-    return 0;
+    Logger.log("*Error: foundEL: " + error.message);
+    errorHandler(error)
   }
+}
+
+/**
+ * Queries the document to see if a property exists for errorsheet
+ *
+ * @return {Boolean} based on existence
+ */
+function foundProp(){
+  try{
+    var properties = PropertiesService.getDocumentProperties();
+    Logger.log("foundProp() returning: " + (properties.getProperty('EL') != null));
+    Logger.log("foundProp() passed!");
+    return properties.getProperty('EL') != null;
+  }
+  catch(error){
+    Logger.log("Retrieval Error: foundProp failed because: " + error.message);
+    errorHandler(error)
+  }
+}
+
+/**
+ * Queries the properties to grab the EL value
+ *
+ * @return {Integer} value of the 'EL' key
+ */
+function getProp(){
+  try{
+      var properties = PropertiesService.getDocumentProperties();
+      return properties.getProperty('EL');
+  }
+  catch(error){
+    Logger.log("*Error: getProp: " + error.message);
+    errorHandler(error)
+  }
+}
+
+/**
+ * checks if EL and it's property exist
+ *
+ * @return {Boolean} based on the existence of EL (and it's property)
+ *
+ * return 0 is a weird edge case / impossible but for testing
+ * (ELfound && !Pfound) is not handled because it's a use case that should be impossible
+ * handling this would require the ERROR_SHEET_ID
+ */
+function exists(){
+  try{
+      var ELfound = foundEL();
+      var Pfound = foundProp();
+      if (ELfound && Pfound){
+        Logger.log("EXISTS() returning true");
+        return true;
+      }
+      else if (!ELfound && Pfound){
+        //delete prop
+        var properties = PropertiesService.getDocumentProperties();
+        properties.deleteProperty('EL');
+        return true;
+      }
+      else if (!ELfound && !Pfound){
+        Logger.log("false");
+        return false;
+      }
+      else {
+        Logger.log("WEIRD CASE");
+        return 0;
+      }
+   Logger.log("exists() passed!");
+  }
+  catch(error){
+    Logger.log("*Error: testForEL(): " + error.message);
+    errorHandler(error)
+  }
+}
+
+/**
+ * errorHandler()
+ *
+ * if the EL doesn't exist, it calls to create it
+ * add the error
+ * and format the error cells
+ */
+function errorHandler(e){
+  try{
+      var itExists = exists();
+      if (!itExists){
+        createEL();
+      }
+      addError(e);
+      formatErrorCells();
+    Logger.log("errorHandler passed!");
+  }
+  catch(error){
+    Logger.log("*Error: errorHandler(): " + error.message);
+    errorHandler(error);
+  }
+}
+
+
+/**
+ * Adds the error to the EL
+ *
+ * uses the getProp() to get the ELID
+ * and adds the error using getLastRow
+ * finally calls formaterrorcells
+ */
+function addError(error){
+  try{
+      var ELID = getProp();
+      var errorsheet = SpreadsheetApp.openById(ELID).getActiveSheet();
+      //set up
+      var lastcol = errorsheet.getLastColumn();
+      var lastrow = errorsheet.getLastRow();
+      var cell = errorsheet.getRange('A1');
+      //compute
+      Logger.log("last (row, col) : (" + lastrow + "," + lastcol + ")");
+      //cell.offset(rowOffset, columnOffset, numRows, numColumns)
+      cell.offset(lastrow, 0).setValue(error.fileName); //filename
+      cell.offset(lastrow, 1).setValue(error.message); //errormessage
+      cell.offset(lastrow, 2).setValue(error.lineNum); //linenum
+      cell.offset(lastrow, 3).setValue(new Date()); //timestamp
+      cell.offset(lastrow, 4).setBackground('#ff4c4c'); //fixed
+      errorEmail(error); //call this to send the error alert mail
+      Logger.log("addError passed!");
+  }
+  catch(error){
+    Logger.log("*Error: addError(): " + error.message);
+    execErrorMail(error);
+  }
+}
+
+
+/**
+ * Formats the ErrorLog
+ *
+ */
+function formatErrorHeaders(){
+  try{
+    var ELID = getProp();
+    var errorsheet = SpreadsheetApp.openById(ELID).getActiveSheet();
+    var datarange = errorsheet.getRange(1, 1, 1, 5)
+    .setValues([ERROR_LOG_HEADERS])
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("center")
+    .setBackground('#326282')
+    .setFontColor('#FFFFFF')
+    .setFontWeight('bold');
+    Logger.log("formatErrorHeaders() passed!");
+  }
+  catch(error){
+    Logger.log("*Error: formatErrorHeaders(): " + error.message);
+    errorHandler(error)
+  }
+}
+
+/**
+ * Formats the ErrorLog cells
+ *
+ */
+function formatErrorCells(){
+  try{
+    var ELID = getProp();
+    var errorsheet = SpreadsheetApp.openById(ELID).getActiveSheet();
+    var datarange = errorsheet.getDataRange().offset(1, 0).setWrap(true);
+    Logger.log("formatErrorCells() passed!");
+  }
+  catch(error){
+    Logger.log("*Error: formatErrorCells(): " + error.message);
+    errorHandler(error)
+  }
+}
+
+
+
+/**
+ * Handles the general error email
+ *
+ * this email is sent after addError() is successfully called
+ * @param {Object} e The event parameter created by a form
+ */
+function errorEmail(e){
+    var admin = ADMIN_EMAIL;
+    var subject = 'Google Scripts Error Alert: ' + PROJECT_TITLE;
+    try{
+      var ELID = getProp();
+      var urlEL = 'https://docs.google.com/spreadsheets/d/' + ELID;
+      var body = "<h3>An error has occurred in this project!</h3>" +
+           "\n\n Here are the details: <br /><br />" +
+           "\n<strong>Error Message:</strong> \t" + e.message + '<br />' +
+           "\n<strong>File Name:</strong> \t" + e.fileName + '<br />' +
+           "\n<strong>Line Number:</strong> \t" + e.lineNumber + '<br />' +
+           "\n<i> this error has been added to the Error Log</i>"+
+           "<br /><br />" +
+           "<a href="+FORM_URL+"> Link to the form </a>" +
+           "<br />" +
+           "<a href="+RESPONSES_URL+"> Link to the Responses </a>" +
+           "<br />" +
+           "<a href="+urlEL+"> Link to the ErrorLog </a>";
+
+      GmailApp.sendEmail(admin, subject, body, {htmlBody:body});
+      Logger.log("errorEmail() passed!")
+   }
+   catch(error){
+       Logger.log("*Error: errorEmail(): " + error.message);
+       execErrorMail(error);
+       return 0;
+   }
+}
+
+/**
+ * Handles the direct  email / execution error email
+ *
+ * this email is sent when addError() triggerEmail() or errorEmail() fail
+ * this is more of an urgent alert because those are key functions
+ */
+function execErrorMail(e){
+    var admin = ADMIN_EMAIL;
+    var subject = 'Google Scripts Error Alert: (Execution) ' + PROJECT_TITLE;
+    try{
+      var ELID = getProp();
+      var urlEL = 'https://docs.google.com/spreadsheets/d/' + ELID;
+      var body = "<h3>An execution error has occurred!</h3>" +
+           "\n\n This is an urgent error. The script will most likely stop working. \n Here are the details of the error: <br /><br />" +
+           "\n<strong>Error Message:</strong> \t" + e.message + '<br />' +
+           "\n<strong>File Name:</strong> \t" + e.fileName + '<br />' +
+           "\n<strong>Line Number:</strong> \t" + e.lineNumber + '<br />' +
+           "\n<i> this error <strong>may not</strong> been added to the Error Log</i>"+
+           "<br /><br />" +
+          "<a href="+FORM_URL+"> Link to the form </a>" +
+           "<br />" +
+           "<a href="+RESPONSES_URL+"> Link to the Responses </a>" +
+           "<br />" +
+           "<a href="+urlEL+"> Link to the ErrorLog </a>";
+
+      GmailApp.sendEmail(admin, subject, body, {htmlBody:body});
+      Logger.log("execErrorMail() passed!")
+      return 0;
+   }
+   catch(error){
+       Logger.log("*Error: execErrorMail(): " + error.message);
+       execErrorMail(error);
+   }
 }
