@@ -1,6 +1,6 @@
 # onFormSubmit
 This is a Google Apps Script that emails meaningful form submission data.
-It has a built in error log manager
+It has a built in error log manager (which is actually just try/catch flows and logging into an datasheet)
 
 ### Running the script
 Open your Google Form. Navigate to Tools -> Script Editor. Create a new Blank project.
