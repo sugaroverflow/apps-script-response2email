@@ -12,12 +12,13 @@
 function triggerEmail(e){
 
     var admin = ADMIN_EMAIL;
-    var subject = PROJECT_TITLE + " was submitted! Response Report";
+    var webmaster = WEBMASTER_EMAIL;
+    var subject = FORM_TITLE + " was submitted!- Response Report";
     var ELID = getProp();
     var urlEL = 'https://docs.google.com/spreadsheets/d/' + ELID;
     try{
       var body = "<h3>Digital Team Project Intake Form - Response</h3>" +
-            "<table style='border:2px solid #D3D3D3;widtd:500'>\
+            "<table style='border: solid #D3D3D3;widtd:500'>\
             <tr><td style='text-align:left; border-bottom:1px solid #D3D3D3; border-right:1px solid #D3D3D3'><b>Date Submitted</b></td>\
             <td style='text-align:left; border-bottom:1px solid #D3D3D3'>"+ e.response.getTimestamp() + "</td></tr>\
             <tr><td style='text-align:left; border-bottom:1px solid #D3D3D3; border-right:1px solid #D3D3D3'><b>Contact</b></td>\
@@ -43,7 +44,8 @@ function triggerEmail(e){
            "<a href="+FORM_URL+"> Link to the Form </a>" +
            "<br />" +
            "<a href="+RESPONSES_URL+"> Link to the Responses </a>";
-      GmailApp.sendEmail(admin, subject, body, {htmlBody:body});
+      GmailApp.sendEmail(admin, subject, body, {htmlBody:body}); //for the team
+      GmailApp.sendEmail(webmaster, subject, body, {htmlBody:body}); //for the trello trigger
       Logger.log("triggerEmail() passed!")
    }
    catch(error){
