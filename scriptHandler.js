@@ -17,7 +17,7 @@ function triggerEmail(e){
     var ELID = getProp();
     var urlEL = 'https://docs.google.com/spreadsheets/d/' + ELID;
     try{
-      var body = "<h3>Digital Team Project Intake Form - Response</h3>" +
+      var body = "<h3>" FORM_TITLE +  " Response </h3>" +
             "<table style='border: solid #D3D3D3;widtd:500'>\
             <tr><td style='text-align:left; border-bottom:1px solid #D3D3D3; border-right:1px solid #D3D3D3'><b>Date Submitted</b></td>\
             <td style='text-align:left; border-bottom:1px solid #D3D3D3'>"+ e.response.getTimestamp() + "</td></tr>\

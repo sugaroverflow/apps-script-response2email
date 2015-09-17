@@ -4,34 +4,35 @@
 
 /*--------------------------- Global Variables -----------------------------------*/
 /*--------------THESE NEED TO BE CHANGED FOR EACH PROJECT-------------------------*/
-var SCRIPT_TITLE = "Response2Email";
-var FORM_TITLE ="DoIt Creative Brief";
+var SCRIPT_TITLE = "TITLE OF YOUR SCRIPT HERE";
+var FORM_TITLE ="TITLE OF YOUR FORM HERE";
 var ERROR_LOG_TITLE = 'ErrorLog: ' + SCRIPT_TITLE;
-var ADMIN_EMAIL = 'digital@boston.gov';
-var WEBMASTER_EMAIL = 'cityboswebmaster@gmail.com';
+var ADMIN_EMAIL = 'ADMIN EMAIL HERE';
+var WEBMASTER_EMAIL = 'SECONDARY EMAIL HERE';
 
 /*URLS*/
 
 //this is a link to the current folder directory
-var CURR_DIR_URL = 'https://drive.google.com/a/boston.gov/folderview?id=0B74lDxO3Qp2VS2VfcFBsR1llcnM&usp=sharing';
+var CURR_DIR_URL = ' CURRENT GOOGLE DRIVE DIRECTORY URL';
 //this is a link to the FORM
-var FORM_URL = 'https://docs.google.com/a/boston.gov/forms/d/1NswnCsh7UlXpk8cgp8uPsuWpNGqGmpA-fna2Zrk72lg';
+var FORM_URL = ' THE URL TO THE FORM ';
 //this is a link to the FORM RESPONSES spreadsheet
-var RESPONSES_URL = 'https://docs.google.com/a/boston.gov/spreadsheets/d/1qjkQgjfVc4RNjeINgpz5i6mH-yyX-QzJV1PW7NKmT0Y';
+var RESPONSES_URL = ' THE URL TO THE RESPONSES OF THE FORM';
 
 
 /* IDS */
 
 //this is the id= portion of the FOLDER URL
-var CURR_DIR_ID ='0B74lDxO3Qp2VS2VfcFBsR1llcnM';
+var CURR_DIR_ID =' DIRECTORY ID ';
 //this is the id= portion of the FORM URL
-var FORM_ID = '1NswnCsh7UlXpk8cgp8uPsuWpNGqGmpA-fna2Zrk72lg';
+var FORM_ID = ' FORM ID ';
 //this is the id= portion of the RESPONSES URL
-var RESPONSES_ID = '1qjkQgjfVc4RNjeINgpz5i6mH-yyX-QzJV1PW7NKmT0Y';
+var RESPONSES_ID = ' RESPONSES ID';
 
 
 /* DON'T TOUCH */
 // these are placeholders for logic for the Error Logging
+// YOU CAN CHANGE THESE PLACEHOLDERS BUT YOU'LL HAVE TO CHANGE THE ADDERROR() SETUP TO MATCH
 var ERROR_LOG_HEADERS = ['FileName', 'ErrorMessage', 'LineNum', 'TimeStamp', 'Fixed?'];
 var ERROR_SHEET_ID = '';
 var ERROR_SHEET_URL = '';
