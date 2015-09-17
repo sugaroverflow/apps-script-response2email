@@ -20,9 +20,9 @@ e.response.getItemResponses()[0].getResponse()
 
 If it helps, the current HTML will output like this:
 #### The response email:
-
+![Image of Response](https://github.com/SugarOverflow/onFormSubmit/blob/master/scriptresponse.png)
 #### The error email:
-
+![Image of Error alert](https://github.com/SugarOverflow/onFormSubmit/blob/master/errorAlert.png)
 ### File & Function Structure
 ```
 Code.js
